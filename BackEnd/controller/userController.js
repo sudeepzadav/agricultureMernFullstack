@@ -8,18 +8,33 @@ const { generateJwt } = require("../utils/generatesTokens");
 // ===============================
 async function adduser(req, res) {
   try {
-    const { name, email, password } = req.body;
+    let { name, email, password, role } = req.body;
 
-    if (!name || !email || !password || password.trim().length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Please fill all fields" });
+    // normalize inputs
+    name = name?.trim();
+    email = email?.trim().toLowerCase();
+    password = password?.trim();
+
+    // normalize role safely
+    role = role?.toLowerCase() || "customer";
+
+    const allowedRoles = ["customer", "farmer"];
+    if (!allowedRoles.includes(role)) {
+      role = "customer";
+    }
+
+    // validation
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill all fields",
+      });
     }
 
     if (password.length < 8) {
       return res.status(400).json({
         success: false,
-        message: "Password should be at least 8 characters",
+        message: "Password must be at least 8 characters",
       });
     }
 
@@ -27,23 +42,29 @@ async function adduser(req, res) {
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: "User already exists with this email",
+        message: "User already exists",
       });
     }
 
-    const hashPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await Users.create({
       name,
       email,
-      password: hashPassword,
-      role: req.body.role,
+      password: hashedPassword,
+      role,
     });
 
     return res.status(201).json({
       success: true,
-      message: "User created dsuccessfully",
-      user: newUser,
+      message: "User created successfully",
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        createdAt: newUser.createdAt,
+      },
     });
   } catch (error) {
     return errorHandler(res, error);
