@@ -1,18 +1,21 @@
 const jwt = require("jsonwebtoken");
 
-async function generateJwt(payload) {
-  let token = jwt.sign(payload, process.env.JWT_SECRET);
-  return token;
+function generateJwt(payload) {
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "1h", // token expiration
+    algorithm: "HS256",
+  });
 }
 
-async function verifyToken(token) {
+function verifyToken(token) {
   try {
-    let data = jwt.verify(token, process.env.JWT_SECRET);
-    return data;
+    return jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ["HS256"],
+    });
   } catch (error) {
-    return false;
+    console.error("JWT verification failed:", error.message);
+    return null; // better than false
   }
 }
-
 
 module.exports = { generateJwt, verifyToken };

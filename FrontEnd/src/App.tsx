@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router";
-import { FarmarInfo, Hero, Login, Navbar, Navbar2 } from "./components";
+import { CustomerProfile, FarmarInfo, FarmerDashboard, Hero, Login, MyProducts, Navbar, Navbar2 } from "./components";
+
 
 const App = () => {
   return (
@@ -10,10 +11,13 @@ const App = () => {
         <Route path="/" element={
           <>
           <Hero />
-          <FarmarInfo />
           </>} />
         <Route path="/login" element={<Login type="login" />} />
         <Route path="/signUp" element={<Login type="signUp" />} />
+        <Route path="/contact" element= {<FarmarInfo/>} />
+        <Route path="/profile" element= {<CustomerProfile/>} />
+        <Route path="/farmer/dashboard" element= {<FarmerDashboard/>} />
+        <Route path="/farmer/myProducts" element= {<MyProducts/>} />
       </Routes>
     </div>
   );

@@ -2,7 +2,7 @@ const Users = require("../model/userSchema");
 const errorHandler = require("../utils/errorHandler");
 const bcrypt = require("bcrypt");
 const { generateJwt } = require("../utils/generatesTokens");
-
+const { sendVerificationEmail } = require("../utils/sendEmail"); 
 // ===============================
 // CREATE USER (signUp)
 // ===============================
@@ -14,10 +14,9 @@ async function adduser(req, res) {
     name = name?.trim();
     email = email?.trim().toLowerCase();
     password = password?.trim();
-
-    // normalize role safely
     role = role?.toLowerCase() || "customer";
 
+    // allowed roles
     const allowedRoles = ["customer", "farmer"];
     if (!allowedRoles.includes(role)) {
       role = "customer";
@@ -38,16 +37,35 @@ async function adduser(req, res) {
       });
     }
 
+    // check existing user
     const existingUser = await Users.findOne({ email });
+
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists",
+      if (existingUser.verify) {
+        return res.status(400).json({
+          success: false,
+          message: "User already registered with this email",
+        });
+      }
+
+      // resend verification email
+      const token = generateJwt({
+        email: existingUser.email,
+        id: existingUser._id,
+      });
+
+      await sendVerificationEmail(existingUser.email, token);
+
+      return res.status(201).json({
+        success: true,
+        message: "Please check your email for verification link",
       });
     }
 
+    // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // create new user
     const newUser = await Users.create({
       name,
       email,
@@ -55,16 +73,18 @@ async function adduser(req, res) {
       role,
     });
 
+    // generate JWT
+    const token = generateJwt({
+      email: newUser.email,
+      id: newUser._id,
+    });
+
+    // send verification email
+    await sendVerificationEmail(newUser.email, token);
+
     return res.status(201).json({
       success: true,
-      message: "User created successfully",
-      user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        createdAt: newUser.createdAt,
-      },
+      message: "Please check your email for verification link",
     });
   } catch (error) {
     return errorHandler(res, error);
@@ -106,6 +126,7 @@ async function userSignIn(req, res) {
     const token = await generateJwt({
       email: user.email,
       id: user._id,
+      role: user.role,
     });
 
     return res.status(200).json({
@@ -125,7 +146,7 @@ async function userSignIn(req, res) {
 }
 
 // ===============================
-// GET USER BY ID(user orofile)
+// GET USER BY ID(user profile)
 // ===============================
 async function getUserById(req, res) {
   try {

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
-import { notify } from "../utils/toast";
+import { notify } from "../page/toast";
 
 type LoginProps = {
   type: "login" | "signUp";
@@ -24,8 +24,7 @@ const Login = ({ type }: LoginProps) => {
     role: "customer",
   });
 
-  // 🔴 FIX: prevent multiple submits
-  let isSubmitting = false;
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleChange(
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -42,10 +41,13 @@ const Login = ({ type }: LoginProps) => {
     e.preventDefault();
 
     if (isSubmitting) return;
-    isSubmitting = true;
+    setIsSubmitting(true);
 
     try {
-      const payload =
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/user/${
+          type === "signUp" ? "signUp" : "login"
+        }`,
         type === "login"
           ? {
               email: data.email,
@@ -56,30 +58,34 @@ const Login = ({ type }: LoginProps) => {
               email: data.email,
               password: data.password,
               role: data.role,
-            };
-
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/user/${
-          type === "signUp" ? "signup" : "login"
-        }`,
-        payload
+            }
       );
 
       notify.success(res.data.message);
 
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      const user = res.data.user;
 
-      if (type === "login") {
-        navigate("/");
-      } else {
-        navigate("/login");
-      }
-    } catch (error: any) {
-      notify.error(
-        error?.response?.data?.message || "Something went wrong"
+      // ✅ store user + token
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        })
       );
+
+      localStorage.setItem("token", user.token);
+
+      // ✅ IMPORTANT FIX (forces navbar update without reload hacks)
+      window.dispatchEvent(new Event("storage"));
+
+      navigate("/");
+    } catch (error: any) {
+      notify.error(error?.response?.data?.message || "Something went wrong");
     } finally {
-      isSubmitting = false;
+      setIsSubmitting(false);
     }
   }
 
@@ -125,8 +131,8 @@ const Login = ({ type }: LoginProps) => {
         {type === "signUp" && (
           <select
             name="role"
-            onChange={handleChange}
             value={data.role}
+            onChange={handleChange}
             className="w-full p-3 border rounded-xl"
           >
             <option value="customer">Customer</option>
@@ -136,9 +142,10 @@ const Login = ({ type }: LoginProps) => {
 
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-3 rounded-xl font-semibold hover:bg-blue-600"
+          disabled={isSubmitting}
+          className="w-full bg-blue-500 text-white py-3 rounded-xl font-semibold"
         >
-          {type === "signUp" ? "Create Account" : "Login"}
+          {isSubmitting ? "Loading..." : type === "signUp" ? "Sign Up" : "Login"}
         </button>
 
         <p className="text-center text-sm">

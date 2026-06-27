@@ -1,9 +1,10 @@
 const express = require("express");
 const cors = require("cors");
+require("dotenv").config();
 const connectDb = require("./config/connectDb");
 const userRouter = require("./router/userRouter");
+const productRouter = require("./router/ProductRouter");
 
-require("dotenv").config();
 
 const app = express();
 app.use(cors());
@@ -15,6 +16,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/user", userRouter);
+app.use("/api/v1/product", productRouter);
 
 app.listen(PORT, () => {
     console.log(`Server Started ${PORT}`);
