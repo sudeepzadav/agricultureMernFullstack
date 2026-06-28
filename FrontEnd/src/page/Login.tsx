@@ -78,10 +78,17 @@ const Login = ({ type }: LoginProps) => {
 
       localStorage.setItem("token", user.token);
 
-      // ✅ IMPORTANT FIX (forces navbar update without reload hacks)
+      // sync navbar
       window.dispatchEvent(new Event("storage"));
 
-      navigate("/");
+      // ✅ ROLE BASED REDIRECT (IMPORTANT CHANGE)
+      if (user.role === "farmer") {
+        navigate("/farmerDashboard");
+      } else if (user.role === "customer") {
+        navigate("/customerDashboard");
+      } else {
+        navigate("/");
+      }
     } catch (error: any) {
       notify.error(error?.response?.data?.message || "Something went wrong");
     } finally {

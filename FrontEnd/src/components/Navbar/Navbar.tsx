@@ -14,7 +14,7 @@ const Navbar = () => {
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // 🔥 Sync auth state when storage changes (login/logout)
+  // Sync auth state when storage changes
   useEffect(() => {
     const syncUser = () => {
       const stored = localStorage.getItem("user");
@@ -35,10 +35,20 @@ const Navbar = () => {
     navigate("/login");
   };
 
+  // ✅ Role-based navigation
+  const goToDashboard = () => {
+    if (user?.role === "farmer") {
+      navigate("/farmerDashboard");
+    } else if (user?.role === "customer") {
+      navigate("/customerDashboard");
+    } else {
+      navigate("/profile");
+    }
+  };
+
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200 px-4 sm:px-6 lg:px-10 py-3">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-
         {/* LOGO */}
         <div className="flex items-center justify-between w-full md:w-auto">
           <div
@@ -60,7 +70,7 @@ const Navbar = () => {
 
             {user ? (
               <button
-                onClick={() => navigate("/profile")}
+                onClick={goToDashboard}
                 className="w-10 h-10 rounded-full bg-amber-400 text-white font-bold"
               >
                 {user.name?.charAt(0).toUpperCase()}
@@ -93,7 +103,6 @@ const Navbar = () => {
 
         {/* DESKTOP MENU */}
         <div className="hidden md:flex items-center gap-6 text-gray-700">
-
           {/* CART */}
           <button className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-100 hover:text-amber-500 transition">
             <FaCartShopping className="text-lg" />
@@ -103,44 +112,30 @@ const Navbar = () => {
           {/* USER SECTION */}
           {user ? (
             <div className="relative">
-
               {/* PROFILE BUTTON */}
               <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
+                onMouseOver={() => setDropdownOpen(!dropdownOpen)}
                 className="flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-orange-100 to-amber-100 hover:from-orange-200 hover:to-amber-200 transition shadow-sm"
               >
                 <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center font-bold text-white">
                   {user.name?.charAt(0).toUpperCase()}
                 </div>
 
-                <span className="font-medium text-gray-800">
-                  {user.name}
-                </span>
+                <span className="font-medium text-gray-800">{user.name}</span>
               </button>
 
               {/* DROPDOWN */}
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 w-44 bg-white border rounded-xl shadow-lg overflow-hidden">
-
-                  {/* ✅ PROFILE LINK */}
+                  {/* DASHBOARD */}
                   <button
                     onClick={() => {
-                      navigate("/profile");
+                      goToDashboard();
                       setDropdownOpen(false);
                     }}
                     className="w-full text-left px-4 py-2 hover:bg-gray-100"
                   >
-                    Profile
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      navigate("/orders");
-                      setDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  >
-                    Orders
+                    Dashboard
                   </button>
 
                   <button
@@ -159,7 +154,7 @@ const Navbar = () => {
             >
               <FaUserPlus />
               <span className="font-medium">Login</span>
-            </button>
+            </button> 
           )}
         </div>
       </div>

@@ -7,5 +7,7 @@ export { default as AdminDashboard } from "../AdminDashBoard/AdminDashboard"
 export { default as Login } from "../page/Login"
 export { default as CustomerProfile } from "./CustomerProfile/customerProfile"
 export { default as MyProducts } from "./farmarInfo/myProducts"
+export { default as OrderList } from "./farmarInfo/orderlist"
+export { default as Footer } from "./footer"
 
 

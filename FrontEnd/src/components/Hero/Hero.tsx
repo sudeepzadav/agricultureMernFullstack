@@ -13,6 +13,7 @@ interface Product {
   category: string;
   location: string;
   images?: string;
+   unit?: string;
 }
 
 const Hero = () => {
@@ -92,7 +93,7 @@ const Hero = () => {
                 {/* DETAILS */}
                 <div className="mt-3 text-sm text-gray-600 space-y-1">
                   <p>💰 Rs {product.price}</p>
-                  <p>📦 Stock: {product.stock}</p>
+                  <p>📦 Stock: {product.stock} {product.unit}</p>
                   <p className="flex items-center gap-1 text-gray-600">
                     <MdLocationPin className="text-red-500" />
                     <span>{product.location}</span>

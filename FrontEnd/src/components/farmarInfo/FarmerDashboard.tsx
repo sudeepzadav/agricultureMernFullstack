@@ -113,7 +113,7 @@ const FarmerDashboard = () => {
   const totalStock = products.reduce((acc, p) => acc + p.stock, 0);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-160 bg-gray-100 flex">
 
       {/* ================= SIDEBAR ================= */}
       <div className="w-64 bg-white shadow-md p-5 hidden md:block">
@@ -122,6 +122,12 @@ const FarmerDashboard = () => {
         </h2>
 
         <ul className="space-y-4 text-gray-700">
+          <li
+            onClick={() => navigate("/farmerDashboard")}
+            className="hover:text-green-600 cursor-pointer"
+          >
+            Dashboard
+          </li>
 
           <li
             onClick={() => navigate("/farmer/myProducts")}
@@ -130,7 +136,9 @@ const FarmerDashboard = () => {
             Products
           </li>
 
-          <li className="hover:text-green-600 cursor-pointer">
+          <li 
+          onClick={() => navigate("/farmer/orders")}
+          className="hover:text-green-600 cursor-pointer">
             Orders
           </li>
 

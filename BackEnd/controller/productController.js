@@ -1,5 +1,7 @@
 const Products = require("../model/productSchema");
 const errorHandler = require("../utils/errorHandler");
+const cloudinary = require("cloudinary").v2;
+const fs = require("fs");
 
 async function addProduct(req, res) {
   try {
@@ -13,7 +15,6 @@ async function addProduct(req, res) {
       unit,
     } = req.body;
 
-    // 1. Validate required fields
     if (!title || !description || !price || !stock || !category || !location) {
       return res.status(400).json({
         success: false,
@@ -21,7 +22,6 @@ async function addProduct(req, res) {
       });
     }
 
-    // 2. Role check
     if (!req.user || req.user.role !== "farmer") {
       return res.status(403).json({
         success: false,
@@ -29,20 +29,35 @@ async function addProduct(req, res) {
       });
     }
 
-    // 3. Handle uploaded image (Multer)
-    const image = req.file ? req.file.filename : null;
+    let imageUrl = null;
+    let imagePublicId = null;
 
-    // 4. Create product
+    
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "products",
+      });
+
+      imageUrl = result.secure_url;
+      imagePublicId = result.public_id;
+
+      
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.log("Failed to delete local file:", err);
+      });
+    }
+
     const product = await Products.create({
       title,
       description,
       price,
       stock,
-      image, // ✅ FIXED (was images from body)
+      images: imageUrl,
       category,
       location,
       unit: unit || "kg",
       farmer: req.user.id,
+      cloudinary_id: imagePublicId, 
     });
 
     return res.status(201).json({
@@ -96,19 +111,28 @@ async function getProductsById(req, res) {
 async function updateProductsById(req, res) {
   try {
     const { id } = req.params;
-    const updateData = req.body;
-    const updatedProduct = await Product.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      req.body,
+      {
+        new: true,          // Return the updated document
+        runValidators: true // Run schema validators
+      }
+    );
+
     if (!updatedProduct) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product Not Found" });
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
     }
 
-    return res
-      .status(201)
-      .json({ success: true, message: "Product updated successfull" });
+    return res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      product: updatedProduct,
+    });
   } catch (error) {
     return errorHandler(res, error);
   }

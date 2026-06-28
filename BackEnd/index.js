@@ -4,6 +4,7 @@ require("dotenv").config();
 const connectDb = require("./config/connectDb");
 const userRouter = require("./router/userRouter");
 const productRouter = require("./router/ProductRouter");
+const cloudinaryConfig = require("./config/cloudinaryConfig");
 
 
 const app = express();
@@ -21,4 +22,5 @@ app.use("/api/v1/product", productRouter);
 app.listen(PORT, () => {
     console.log(`Server Started ${PORT}`);
     connectDb();
+    cloudinaryConfig()
 });

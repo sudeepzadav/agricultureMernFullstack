@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router";
-import { CustomerProfile, FarmarInfo, FarmerDashboard, Hero, Login, MyProducts, Navbar, Navbar2 } from "./components";
+import { FarmarInfo, FarmerDashboard, Footer, Hero, Login, MyProducts, Navbar, Navbar2, OrderList } from "./components";
+import CustomerDashboard from "./components/CustomerProfile/customerProfile";
 
 
 const App = () => {
@@ -15,10 +16,12 @@ const App = () => {
         <Route path="/login" element={<Login type="login" />} />
         <Route path="/signUp" element={<Login type="signUp" />} />
         <Route path="/contact" element= {<FarmarInfo/>} />
-        <Route path="/profile" element= {<CustomerProfile/>} />
-        <Route path="/farmer/dashboard" element= {<FarmerDashboard/>} />
+        <Route path="/farmerDashboard" element= {<FarmerDashboard/>} />
+        <Route path="/customerDashboard" element= {<CustomerDashboard/>} />
         <Route path="/farmer/myProducts" element= {<MyProducts/>} />
+        <Route path="/farmer/orders" element= {<OrderList/>} />
       </Routes>
+      <Footer/>
     </div>
   );
 };

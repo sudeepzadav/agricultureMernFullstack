@@ -1,16 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  role: "customer" | "farmer" | "admin";
-};
-
-const Profile = () => {
+const CustomerDashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -20,71 +13,85 @@ const Profile = () => {
       return;
     }
 
-    setUser(JSON.parse(storedUser));
+    const parsed = JSON.parse(storedUser);
+
+    // basic role protection
+    if (parsed.role !== "customer") {
+      navigate("/");
+      return;
+    }
+
+    setUser(parsed);
   }, [navigate]);
 
-  if (!user) return null;
-
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6 space-y-6">
-        {/* HEADER */}
-        <div className="text-center">
-          <div className="w-20 h-20 mx-auto rounded-full bg-orange-400 flex items-center justify-center text-white text-2xl font-bold">
-            {user.name?.charAt(0).toUpperCase()}
-          </div>
-
-          <h2 className="mt-3 text-xl font-bold">{user.name}</h2>
-          <p className="text-gray-500">{user.email}</p>
-
-          <span className="inline-block mt-2 px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-700 capitalize">
-            {user.role}
-          </span>
+    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-10 py-6">
+      {/* Header */}
+      <div className="bg-white shadow-sm rounded-xl p-6 flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Welcome, {user?.name || "Customer"} 👋
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Manage your orders, profile, and shopping activity
+          </p>
         </div>
 
-        {/* ACTIONS */}
-        <div className="space-y-3">
-          {/* ADMIN */}
-          {user.role === "admin" && (
-            <button
-              onClick={() => navigate("/admin/dashboard")}
-              className="w-full bg-red-500 text-white py-2 rounded-xl hover:bg-red-600 transition"
-            >
-              Go to Admin Dashboard
-            </button>
-          )}
+        <button
+          onClick={() => navigate("/")}
+          className="mt-4 md:mt-0 px-5 py-2 rounded-full bg-orange-500 text-white hover:opacity-90 transition"
+        >
+          Continue Shopping
+        </button>
+      </div>
 
-          {/* FARMER */}
-          {user.role === "farmer" && (
-            <button
-              onClick={() => navigate("/farmer/dashboard")}
-              className="w-full bg-green-500 text-white py-2 rounded-xl hover:bg-green-600 transition"
-            >
-              Go to Farmer Dashboard
-            </button>
-          )}
+      {/* Dashboard Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
 
-          {/* CUSTOMER */}
-          {user.role === "customer" && (
-            <button
-              onClick={() => navigate("/orders")}
-              className="w-full bg-blue-500 text-white py-2 rounded-xl hover:bg-blue-600 transition"
-            >
-              View My Orders
-            </button>
-          )}
-
-          {/* COMMON ACTIONS */}
-          <button
-            onClick={() => navigate("/")}
-            className="w-full border py-2 rounded-xl hover:bg-gray-100 transition"
-          >
-            Back to Home
-          </button>
+        {/* Orders */}
+        <div
+          onClick={() => navigate("/orders")}
+          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md cursor-pointer transition"
+        >
+          <h2 className="text-lg font-semibold text-gray-800">My Orders</h2>
+          <p className="text-gray-500 mt-2">
+            View and track your recent purchases
+          </p>
         </div>
+
+        {/* Profile */}
+        <div
+          onClick={() => navigate("/profile")}
+          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md cursor-pointer transition"
+        >
+          <h2 className="text-lg font-semibold text-gray-800">Profile</h2>
+          <p className="text-gray-500 mt-2">
+            Update your personal information
+          </p>
+        </div>
+
+        {/* Cart */}
+        <div
+          onClick={() => navigate("/cart")}
+          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md cursor-pointer transition"
+        >
+          <h2 className="text-lg font-semibold text-gray-800">Cart</h2>
+          <p className="text-gray-500 mt-2">
+            View items you are about to purchase
+          </p>
+        </div>
+
+        {/* Settings (future use) */}
+        <div className="bg-white p-6 rounded-xl shadow-sm opacity-60">
+          <h2 className="text-lg font-semibold text-gray-800">Settings</h2>
+          <p className="text-gray-500 mt-2">
+            Coming soon...
+          </p>
+        </div>
+
       </div>
     </div>
   );
 };
 
-export default Profile;
+export default CustomerDashboard;
