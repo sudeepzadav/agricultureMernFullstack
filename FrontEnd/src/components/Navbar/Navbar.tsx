@@ -3,39 +3,55 @@ import { IoSearch } from "react-icons/io5";
 import { useNavigate } from "react-router";
 import { Logo } from "../../constants/image";
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../../utils/store";
+import { logout as logoutAction } from "../../utils/userSlice";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const [user, setUser] = useState<any>(() => {
-    const stored = localStorage.getItem("user");
-    return stored ? JSON.parse(stored) : null;
-  });
+  // ✅ Single source of truth: Redux, not localStorage
+  const user = useSelector((state: RootState) => state.user.user);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Sync auth state when storage changes
+  // 🛒 CART COUNT STATE
+  const [cartCount, setCartCount] = useState(0);
+
+  // ✅ Sync cart count (still localStorage-based, that's fine for cart)
   useEffect(() => {
-    const syncUser = () => {
-      const stored = localStorage.getItem("user");
-      setUser(stored ? JSON.parse(stored) : null);
+    const syncCart = () => {
+      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+      const total = cart.reduce((sum: number, item: any) => {
+        return sum + (item.qty || item.quantity || 1);
+      }, 0);
+
+      setCartCount(total);
     };
 
-    window.addEventListener("storage", syncUser);
-    return () => window.removeEventListener("storage", syncUser);
+    syncCart();
+
+    window.addEventListener("storage", syncCart);
+    window.addEventListener("focus", syncCart);
+
+    return () => {
+      window.removeEventListener("storage", syncCart);
+      window.removeEventListener("focus", syncCart);
+    };
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
 
-    setUser(null);
+    dispatch(logoutAction());
     setDropdownOpen(false);
 
     navigate("/login");
   };
 
-  // ✅ Role-based navigation
   const goToDashboard = () => {
     if (user?.role === "farmer") {
       navigate("/farmerDashboard");
@@ -48,25 +64,31 @@ const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200 px-4 sm:px-6 lg:px-10 py-3">
+
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
         {/* LOGO */}
         <div className="flex items-center justify-between w-full md:w-auto">
           <div
             onClick={() => navigate("/")}
-            className="cursor-pointer select-none flex items-center justify-center p-2 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-gray-100"
+            className="cursor-pointer flex items-center justify-center p-2 rounded-xl hover:bg-gray-100 transition"
           >
-            <img
-              src={Logo}
-              alt="Logo"
-              className="w-36 sm:w-44 h-auto object-contain drop-shadow-md transition-transform duration-300 hover:rotate-2 rounded-lg"
-            />
+            <img src={Logo} alt="Logo" className="w-36 sm:w-44" />
           </div>
 
           {/* MOBILE ICONS */}
-          <div className="flex md:hidden items-center gap-4 text-xl text-gray-700">
-            <button className="p-2 rounded-full hover:bg-gray-100 hover:text-amber-500 transition">
+          <div className="flex md:hidden items-center gap-4 text-xl">
+
+            {/* 🛒 CART MOBILE */}
+            <div className="relative cursor-pointer" onClick={() => navigate("/cart")}>
               <FaCartShopping />
-            </button>
+
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                  {cartCount}
+                </span>
+              )}
+            </div>
 
             {user ? (
               <button
@@ -76,10 +98,7 @@ const Navbar = () => {
                 {user.name?.charAt(0).toUpperCase()}
               </button>
             ) : (
-              <button
-                onClick={() => navigate("/login")}
-                className="p-2 rounded-full hover:bg-gray-100 hover:text-amber-500 transition"
-              >
+              <button onClick={() => navigate("/login")}>
                 <FaUserPlus />
               </button>
             )}
@@ -88,46 +107,54 @@ const Navbar = () => {
 
         {/* SEARCH */}
         <div className="w-full md:max-w-xl mx-auto">
-          <div className="flex w-full shadow-sm rounded-full overflow-hidden border border-gray-300 focus-within:ring-2 focus-within:ring-amber-400 transition">
+          <div className="flex border rounded-full overflow-hidden">
             <input
               type="text"
-              placeholder="Search for products, brands..."
-              className="flex-1 px-4 py-2 text-sm outline-none bg-white"
+              placeholder="Search products..."
+              className="flex-1 px-4 py-2 outline-none"
             />
 
-            <button className="bg-linear-to-r from-amber-400 to-orange-500 px-5 flex items-center justify-center hover:opacity-90 transition">
-              <IoSearch className="text-white text-lg" />
+            <button className="bg-orange-500 px-5 text-white">
+              <IoSearch />
             </button>
           </div>
         </div>
 
         {/* DESKTOP MENU */}
-        <div className="hidden md:flex items-center gap-6 text-gray-700">
-          {/* CART */}
-          <button className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-100 hover:text-amber-500 transition">
-            <FaCartShopping className="text-lg" />
-            <span className="font-medium">Cart</span>
-          </button>
+        <div className="hidden md:flex items-center gap-6">
 
-          {/* USER SECTION */}
+          {/* 🛒 CART DESKTOP */}
+          <div
+            className="relative cursor-pointer"
+            onClick={() => navigate("/cart")}
+          >
+            <FaCartShopping className="text-xl" />
+
+            {cartCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                {cartCount}
+              </span>
+            )}
+          </div>
+
+          {/* USER */}
           {user ? (
             <div className="relative">
-              {/* PROFILE BUTTON */}
+
               <button
-                onMouseOver={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-orange-100 to-amber-100 hover:from-orange-200 hover:to-amber-200 transition shadow-sm"
+                onClick={() => setDropdownOpen((prev) => !prev)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-orange-100"
               >
-                <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center font-bold text-white">
+                <div className="w-8 h-8 bg-amber-500 text-white flex items-center justify-center rounded-full">
                   {user.name?.charAt(0).toUpperCase()}
                 </div>
 
-                <span className="font-medium text-gray-800">{user.name}</span>
+                <span>{user.name}</span>
               </button>
 
-              {/* DROPDOWN */}
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-white border rounded-xl shadow-lg overflow-hidden">
-                  {/* DASHBOARD */}
+                <div className="absolute right-0 mt-2 w-44 bg-white shadow-lg rounded-xl overflow-hidden">
+
                   <button
                     onClick={() => {
                       goToDashboard();
@@ -144,17 +171,18 @@ const Navbar = () => {
                   >
                     Logout
                   </button>
+
                 </div>
               )}
             </div>
           ) : (
             <button
               onClick={() => navigate("/login")}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-purple-500 to-orange-400 text-white hover:opacity-90 transition"
+              className="flex items-center gap-2 bg-purple-500 text-white px-4 py-2 rounded-full"
             >
               <FaUserPlus />
-              <span className="font-medium">Login</span>
-            </button> 
+              Login
+            </button>
           )}
         </div>
       </div>

@@ -6,7 +6,7 @@ const Navbar = () => {
   const [activeId, setActiveId] = useState(1); // 1 = Home, default highlight
 
   return (
-    <nav className="hidden lg:flex w-full bg-gray-200 px-6 py-3 justify-between items-center sticky top-0 z-40">
+    <nav className="hidden lg:flex w-screen bg-gray-200 px-6 py-3 justify-between items-center sticky top-26 z-40">
       <div className="flex gap-6">
         {menuItems.map((item) => (
           <div key={item.id} className="relative group">

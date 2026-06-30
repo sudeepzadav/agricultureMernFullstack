@@ -6,10 +6,12 @@ import App from "./App.tsx";
 import { BrowserRouter } from "react-router";
 import { Toaster } from "react-hot-toast";
 
-
+import { Provider } from "react-redux";
+import { store } from "./utils/store.ts";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
+    <Provider store={store}>
       <BrowserRouter>
         <Toaster
           position="top-right"
@@ -28,5 +30,6 @@ createRoot(document.getElementById("root")!).render(
 
         <App />
       </BrowserRouter>
+    </Provider>
   </StrictMode>
 );

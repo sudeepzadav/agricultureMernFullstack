@@ -112,7 +112,7 @@ async function updateProductsById(req, res) {
   try {
     const { id } = req.params;
 
-    const updatedProduct = await Product.findByIdAndUpdate(
+    const updatedProduct = await Products.findByIdAndUpdate(
       id,
       req.body,
       {
@@ -141,7 +141,7 @@ async function updateProductsById(req, res) {
 async function deleteProducts(req, res) {
   try {
     const { id } = req.params;
-    const product = await Product.findByIdAndDelete(id);
+    const product = await Products.findByIdAndDelete(id);
 
     if (!product) {
       return res

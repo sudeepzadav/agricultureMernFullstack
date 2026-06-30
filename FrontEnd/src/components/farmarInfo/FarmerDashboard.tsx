@@ -81,16 +81,12 @@ const FarmerDashboard = () => {
         formData.append("image", image);
       }
 
-      await axios.post(
-        "http://localhost:4000/api/v1/product",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      await axios.post("http://localhost:4000/api/v1/product", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       toast.success("Product added successfully ✅");
 
@@ -114,12 +110,9 @@ const FarmerDashboard = () => {
 
   return (
     <div className="min-h-160 bg-gray-100 flex">
-
       {/* ================= SIDEBAR ================= */}
       <div className="w-64 bg-white shadow-md p-5 hidden md:block">
-        <h2 className="text-xl font-bold mb-6 text-green-600">
-          Farmer Panel
-        </h2>
+        <h2 className="text-xl font-bold mb-6 text-green-600">Farmer Panel</h2>
 
         <ul className="space-y-4 text-gray-700">
           <li
@@ -136,29 +129,23 @@ const FarmerDashboard = () => {
             Products
           </li>
 
-          <li 
-          onClick={() => navigate("/farmer/orders")}
-          className="hover:text-green-600 cursor-pointer">
+          <li
+            onClick={() => navigate("/farmer/orders")}
+            className="hover:text-green-600 cursor-pointer"
+          >
             Orders
           </li>
 
-          <li className="hover:text-green-600 cursor-pointer">
-            Settings
-          </li>
-
+          <li className="hover:text-green-600 cursor-pointer">Settings</li>
         </ul>
       </div>
 
       {/* ================= MAIN ================= */}
       <div className="flex-1 p-5 md:p-8">
-
-        <h1 className="text-3xl font-bold mb-6">
-          Farmer Dashboard 🌾
-        </h1>
+        <h1 className="text-3xl font-bold mb-6">Farmer Dashboard 🌾</h1>
 
         {/* ================= STATS ================= */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-
           <div className="bg-white p-5 rounded-xl shadow">
             <h3>Total Products</h3>
             <p className="text-2xl font-bold">{products.length}</p>
@@ -173,15 +160,11 @@ const FarmerDashboard = () => {
             <h3>Revenue</h3>
             <p className="text-2xl font-bold">Rs 0</p>
           </div>
-
         </div>
 
         {/* ================= ADD PRODUCT ================= */}
         <div className="bg-white p-5 rounded-xl shadow">
-
-          <h2 className="text-xl font-semibold mb-4">
-            Add Product
-          </h2>
+          <h2 className="text-xl font-semibold mb-4">Add Product</h2>
 
           <form
             onSubmit={handleAddProduct}
@@ -253,11 +236,8 @@ const FarmerDashboard = () => {
             >
               Add Product
             </button>
-
           </form>
-
         </div>
-
       </div>
     </div>
   );

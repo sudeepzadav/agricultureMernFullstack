@@ -1,6 +1,8 @@
 import axios from "axios";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
+import { useDispatch } from "react-redux";
+import { login } from "../utils/userSlice";
 import { notify } from "../page/toast";
 
 type LoginProps = {
@@ -16,6 +18,7 @@ type FormData = {
 
 const Login = ({ type }: LoginProps) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [data, setData] = useState<FormData>({
     name: "",
@@ -39,8 +42,8 @@ const Login = ({ type }: LoginProps) => {
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-
     if (isSubmitting) return;
+
     setIsSubmitting(true);
 
     try {
@@ -61,34 +64,32 @@ const Login = ({ type }: LoginProps) => {
             }
       );
 
-      notify.success(res.data.message);
-
       const user = res.data.user;
 
-      // ✅ store user + token
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          id: user.id,
+      notify.success(res.data.message);
+
+      // ✅ Redux store
+      dispatch(
+        login({
+          _id: user._id || user.id,
           name: user.name,
           email: user.email,
           role: user.role,
+          token: user.token,
         })
       );
 
+      // ✅ localStorage sync (IMPORTANT FOR NAVBAR)
+      localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", user.token);
 
-      // sync navbar
-      window.dispatchEvent(new Event("storage"));
-
-      // ✅ ROLE BASED REDIRECT (IMPORTANT CHANGE)
-      if (user.role === "farmer") {
-        navigate("/farmerDashboard");
-      } else if (user.role === "customer") {
-        navigate("/customerDashboard");
-      } else {
-        navigate("/");
-      }
+      // ✅ redirect
+      // if (user.role === "farmer") {
+      //   navigate("/farmerDashboard");
+      // } else {
+      //   navigate("/customerDashboard");
+      // }
+      navigate("/")
     } catch (error: any) {
       notify.error(error?.response?.data?.message || "Something went wrong");
     } finally {

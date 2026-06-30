@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
 import axios from "axios";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-
 type Product = {
   _id: string;
   title: string;
@@ -13,7 +12,7 @@ type Product = {
   category: string;
 };
 
-const MyProducts = () => {
+const myProducts = () => {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -106,7 +105,6 @@ const MyProducts = () => {
       toast.error("Update failed");
     }
   };
-
   return (
     <div className="flex min-h-screen bg-gray-100">
 
@@ -267,7 +265,7 @@ const MyProducts = () => {
 
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default MyProducts;
+export default myProducts
