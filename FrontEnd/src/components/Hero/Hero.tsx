@@ -22,8 +22,11 @@ interface Product {
 const Hero = () => {
   const dispatch = useDispatch();
 
-  // ✅ user for auth/token
+  // user for auth/token
   const user = useSelector((state: RootState) => state.user.user);
+
+  // live search term from Navbar
+  const searchTerm = useSelector((state: RootState) => state.search.term);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,29 +37,29 @@ const Hero = () => {
 
   // FETCH PRODUCTS
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await axios.get(
-          "http://localhost:4000/api/v1/product"
-        );
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get("http://localhost:4000/api/v1/product");
 
-        const fetched = res.data?.products || [];
-        setProducts(fetched);
+      const fetched = res.data?.products || [];
 
-        if (fetched.length) {
-          const highest = Math.max(...fetched.map((p: Product) => p.price));
-          setMaxPrice(highest);
-        }
-      } catch (error) {
-        console.log(error);
-        setProducts([]);
-      } finally {
-        setLoading(false);
+      // newest first (opposite order)
+      setProducts([...fetched].reverse());
+
+      if (fetched.length) {
+        const highest = Math.max(...fetched.map((p: Product) => p.price));
+        setMaxPrice(highest);
       }
-    };
+    } catch (error) {
+      console.log(error);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchProducts();
-  }, []);
+  fetchProducts();
+}, []);
 
   // ADD TO CART (Redux + Backend ready)
   const addToCartHandler = async (product: Product) => {
@@ -118,7 +121,12 @@ const Hero = () => {
 
     const priceMatch = maxPrice === 0 || product.price <= maxPrice;
 
-    return categoryMatch && locationMatch && priceMatch;
+    // ✅ live search filter — title only, case-insensitive
+    const searchMatch =
+      searchTerm.trim() === "" ||
+      product.title.toLowerCase().includes(searchTerm.trim().toLowerCase());
+
+    return categoryMatch && locationMatch && priceMatch && searchMatch;
   });
 
   const overallMaxPrice = products.length

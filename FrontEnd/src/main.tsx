@@ -8,27 +8,30 @@ import { Toaster } from "react-hot-toast";
 
 import { Provider } from "react-redux";
 import { store } from "./utils/store.ts";
+import { CartProvider } from "./components/context/CartContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
       <BrowserRouter>
-        <Toaster
-          position="top-right"
-          reverseOrder={false}
-          gutter={12}
-          toastOptions={{
-            duration: 3000,
-            loading: {
-              style: {
-                background: "#3b82f6",
-                color: "#fff",
+        <CartProvider>
+          <Toaster
+            position="top-right"
+            reverseOrder={false}
+            gutter={12}
+            toastOptions={{
+              duration: 3000,
+              loading: {
+                style: {
+                  background: "#3b82f6",
+                  color: "#fff",
+                },
               },
-            },
-          }}
-        />
+            }}
+          />
 
-        <App />
+          <App />
+        </CartProvider>
       </BrowserRouter>
     </Provider>
   </StrictMode>

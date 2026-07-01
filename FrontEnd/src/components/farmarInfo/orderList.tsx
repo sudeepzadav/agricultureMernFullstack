@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
+import { Profile } from "..";
 
 type Order = {
   _id: string;
@@ -58,40 +59,46 @@ const orderList = () => {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-150 bg-gray-50">
       {/* ✅ SIDEBAR */}
-      <div className="w-64 bg-white shadow-md p-5 hidden md:block">
-        <h2 className="text-xl font-bold mb-6 text-green-600">Farmer Panel</h2>
+      <div className="w-64 bg-white shadow-md p-5 hidden md:flex flex-col justify-between">
+        <div>
+          <h2 className="text-xl font-bold mb-6 text-green-600">
+            Farmer Panel
+          </h2>
 
-        <ul className="space-y-4 text-gray-700">
-          <li
-            onClick={() => navigate("/farmerDashboard")}
-            className="hover:text-green-600 cursor-pointer"
-          >
-            Dashboard
-          </li>
+          <ul className="space-y-4 text-gray-700">
+            <li
+              onClick={() => navigate("/farmerDashboard")}
+              className="hover:text-green-600 cursor-pointer"
+            >
+              Dashboard
+            </li>
 
-          <li
-            onClick={() => navigate("/farmer/myProducts")}
-            className="hover:text-green-600 cursor-pointer"
-          >
-            Products
-          </li>
+            <li
+              onClick={() => navigate("/farmer/myProducts")}
+              className="hover:text-green-600 cursor-pointer"
+            >
+              Products
+            </li>
 
-          <li
-            onClick={() => navigate("/farmer/orders")}
-            className="hover:text-green-600 cursor-pointer font-semibold"
-          >
-            Orders
-          </li>
+            <li
+              onClick={() => navigate("/farmer/orders")}
+              className="hover:text-green-600 cursor-pointer font-semibold"
+            >
+              Orders
+            </li>
 
-          <li
-            onClick={() => navigate("/farmer/settings")}
-            className="hover:text-green-600 cursor-pointer"
-          >
-            Settings
-          </li>
-        </ul>
+            <li
+              onClick={() => navigate("/farmer/farmerSetting")}
+              className="hover:text-green-600 cursor-pointer"
+            >
+              Settings
+            </li>
+          </ul>
+        </div>
+
+        <Profile />
       </div>
 
       {/* ✅ MAIN CONTENT */}

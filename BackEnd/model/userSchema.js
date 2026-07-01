@@ -28,11 +28,17 @@ const userSchema = new mongoose.Schema(
       default: "customer",
       required: true,
     },
+
+    verify: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
   }
 );
+
 
 const Users = mongoose.model("User", userSchema);
 

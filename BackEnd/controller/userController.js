@@ -1,8 +1,61 @@
 const Users = require("../model/userSchema");
 const errorHandler = require("../utils/errorHandler");
 const bcrypt = require("bcrypt");
-const { generateJwt } = require("../utils/generatesTokens");
-const { sendVerificationEmail } = require("../utils/sendEmail"); 
+
+const {
+  generateAccessToken,
+  generateRefreshToken,
+  generateVerificationToken,
+  verifyToken,
+} = require("../utils/generatesTokens");
+
+const { sendVerificationEmail } = require("../utils/sendEmail");
+// ===============================
+// email verificaition
+// ===============================
+async function verifyEmail(req, res) {
+  try {
+    const { token } = req.params;
+
+    const decoded = verifyToken(token);
+
+    if (!decoded) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification link",
+      });
+    }
+
+    const user = await Users.findById(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.verify) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already verified",
+      });
+    }
+
+    user.verify = true;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully. You can now login.",
+    });
+  } catch (error) {
+    return errorHandler(res, error);
+  }
+}
+
+
+
 // ===============================
 // CREATE USER (signUp)
 // ===============================
@@ -10,19 +63,14 @@ async function adduser(req, res) {
   try {
     let { name, email, password, role } = req.body;
 
-    // normalize inputs
     name = name?.trim();
     email = email?.trim().toLowerCase();
     password = password?.trim();
     role = role?.toLowerCase() || "customer";
 
-    // allowed roles
     const allowedRoles = ["customer", "farmer"];
-    if (!allowedRoles.includes(role)) {
-      role = "customer";
-    }
+    if (!allowedRoles.includes(role)) role = "customer";
 
-    // validation
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -37,54 +85,50 @@ async function adduser(req, res) {
       });
     }
 
-    // check existing user
     const existingUser = await Users.findOne({ email });
 
     if (existingUser) {
       if (existingUser.verify) {
         return res.status(400).json({
           success: false,
-          message: "User already registered with this email",
+          message: "User already exists",
         });
       }
 
-      // resend verification email
-      const token = generateJwt({
+      // resend verification for existing but unverified user
+      const token = generateVerificationToken({
         email: existingUser.email,
         id: existingUser._id,
       });
 
-      await sendVerificationEmail(existingUser.email, token);
+      await sendVerificationEmail(existingUser.email, token); // ✅ fixed
 
-      return res.status(201).json({
+      return res.status(200).json({
         success: true,
-        message: "Please check your email for verification link",
+        message: "Verification email sent",
       });
     }
 
-    // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // create new user
     const newUser = await Users.create({
       name,
       email,
       password: hashedPassword,
       role,
+      verify: false,
     });
 
-    // generate JWT
-    const token = generateJwt({
+    const token = generateVerificationToken({
       email: newUser.email,
       id: newUser._id,
     });
 
-    // send verification email
     await sendVerificationEmail(newUser.email, token);
 
     return res.status(201).json({
       success: true,
-      message: "Please check your email for verification link",
+      message: "Please verify your email",
     });
   } catch (error) {
     return errorHandler(res, error);
@@ -96,7 +140,7 @@ async function adduser(req, res) {
 // ===============================
 async function userSignIn(req, res) {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
@@ -105,12 +149,21 @@ async function userSignIn(req, res) {
       });
     }
 
+    email = email.trim().toLowerCase();
+
     const user = await Users.findOne({ email });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User Not Found",
+        message: "User not found",
+      });
+    }
+
+    if (!user.verify) {
+      return res.status(403).json({
+        success: false,
+        message: "Please verify your email first",
       });
     }
 
@@ -123,27 +176,40 @@ async function userSignIn(req, res) {
       });
     }
 
-    const token = await generateJwt({
-      email: user.email,
+    const accessToken = generateAccessToken({
       id: user._id,
+      email: user.email,
       role: user.role,
     });
 
-    return res.status(200).json({
-      success: true,
-      message: "Login successful",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        token,
-      },
+    const refreshToken = generateRefreshToken({
+      id: user._id,
     });
+
+    return res
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      })
+      .status(200)
+      .json({
+        success: true,
+        message: "Login successful",
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          token: accessToken,
+        },
+      });
   } catch (error) {
-    errorHandler(res, error);
+    return errorHandler(res, error);
   }
 }
+
 
 // ===============================
 // GET USER BY ID(user profile)
@@ -216,6 +282,7 @@ async function deleteUserById(req, res) {
   }
 }
 module.exports = {
+  verifyEmail,
   adduser,
   userSignIn,
   getUserById,

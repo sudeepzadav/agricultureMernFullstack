@@ -1,7 +1,9 @@
 import { createContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
 import type { CartType } from "../../page/cart";
+import type { RootState } from "../../utils/store";
 
 interface CartContextType {
   cart: CartType | null;
@@ -16,19 +18,25 @@ export const CartContext = createContext<CartContextType | null>(null);
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartType | null>(null);
 
-  const token = localStorage.getItem("token");
+  // ✅ reactive — re-renders whenever login/logout happens
+  const user = useSelector((state: RootState) => state.user.user);
 
-  const config = {
+  const getConfig = () => ({
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${user?.token}`,
     },
-  };
+  });
 
   const fetchCart = async () => {
+    if (!user?.token) {
+      setCart(null); // ✅ clear cart on logout instead of leaving stale data
+      return;
+    }
+
     try {
       const res = await axios.get(
         "http://localhost:4000/api/v1/cart",
-        config
+        getConfig()
       );
       setCart(res.data.cart);
     } catch (error) {
@@ -37,11 +45,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addToCart = async (productId: string, quantity = 1) => {
+    if (!user?.token) return;
     try {
       await axios.post(
         "http://localhost:4000/api/v1/cart/add",
         { productId, quantity },
-        config
+        getConfig()
       );
       await fetchCart();
     } catch (error) {
@@ -50,10 +59,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const removeItem = async (productId: string) => {
+    if (!user?.token) return;
     try {
       await axios.delete(
         `http://localhost:4000/api/v1/cart/remove/${productId}`,
-        config
+        getConfig()
       );
       await fetchCart();
     } catch (error) {
@@ -62,10 +72,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const clearCart = async () => {
+    if (!user?.token) return;
     try {
       await axios.delete(
         "http://localhost:4000/api/v1/cart/clear",
-        config
+        getConfig()
       );
       await fetchCart();
     } catch (error) {
@@ -73,9 +84,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // ✅ re-fetches automatically on login AND clears on logout
   useEffect(() => {
     fetchCart();
-  }, []);
+  }, [user]);
 
   return (
     <CartContext.Provider

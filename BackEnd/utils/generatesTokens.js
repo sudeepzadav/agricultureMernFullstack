@@ -1,21 +1,47 @@
 const jwt = require("jsonwebtoken");
 
-function generateJwt(payload) {
+// ======================
+// ACCESS TOKEN (LOGIN)
+// ======================
+function generateAccessToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: "1h", // token expiration
-    algorithm: "HS256",
+    expiresIn: "15m",
   });
 }
 
+// ======================
+// REFRESH TOKEN
+// ======================
+function generateRefreshToken(payload) {
+  return jwt.sign(payload, process.env.REFRESH_SECRET, {
+    expiresIn: "7d",
+  });
+}
+
+// ======================
+// EMAIL VERIFICATION TOKEN
+// ======================
+function generateVerificationToken(payload) {
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "15m",
+  });
+}
+
+// ======================
+// VERIFY TOKEN
+// ======================
 function verifyToken(token) {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET, {
-      algorithms: ["HS256"],
-    });
+    return jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
     console.error("JWT verification failed:", error.message);
-    return null; // better than false
+    return null;
   }
 }
 
-module.exports = { generateJwt, verifyToken };
+module.exports = {
+  generateAccessToken,
+  generateRefreshToken,
+  generateVerificationToken,
+  verifyToken,
+};

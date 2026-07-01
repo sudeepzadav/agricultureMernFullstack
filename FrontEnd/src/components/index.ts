@@ -7,8 +7,10 @@ export { default as FarmerDashboard } from "./farmarInfo/FarmerDashboard"
 export { default as AdminDashboard } from "../AdminDashBoard/AdminDashboard"
 export { default as Login } from "../page/Login"
 export { default as CustomerProfile } from "./CustomerProfile/customerProfile"
-export { default as MyProducts } from "./farmarInfo/MyProducts"
+export { default as Profile } from "./UserProfile"
 export { default as OrderList } from "./farmarInfo/orderList"
 export { default as Footer } from "./footer"
+export { default as FarmerSetting } from "./farmarInfo/FarmerSetting"
+export { default as VerifyEmail } from "../page/VerifyEmail"
 
 

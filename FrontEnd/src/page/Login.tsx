@@ -64,11 +64,18 @@ const Login = ({ type }: LoginProps) => {
             }
       );
 
-      const user = res.data.user;
-
       notify.success(res.data.message);
 
-      // ✅ Redux store
+      // ✅ Signup never returns a logged-in user (backend requires email
+      // verification first) — just notify and send them to login.
+      if (type === "signUp") {
+        navigate("/login");
+        return;
+      }
+
+      // ✅ Login only from here on — backend guarantees res.data.user exists
+      const user = res.data.user;
+
       dispatch(
         login({
           _id: user._id || user.id,
@@ -84,12 +91,11 @@ const Login = ({ type }: LoginProps) => {
       localStorage.setItem("token", user.token);
 
       // ✅ redirect
-      // if (user.role === "farmer") {
-      //   navigate("/farmerDashboard");
-      // } else {
-      //   navigate("/customerDashboard");
-      // }
-      navigate("/")
+      if (user.role === "farmer") {
+        navigate("/farmerDashboard");
+      } else {
+        navigate("/customerDashboard");
+      }
     } catch (error: any) {
       notify.error(error?.response?.data?.message || "Something went wrong");
     } finally {
@@ -166,7 +172,7 @@ const Login = ({ type }: LoginProps) => {
             </>
           ) : (
             <>
-              Don’t have an account?{" "}
+              Don't have an account?{" "}
               <Link to="/signUp" className="text-blue-500">
                 Sign Up
               </Link>

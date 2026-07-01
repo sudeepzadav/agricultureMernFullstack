@@ -2,45 +2,80 @@ import { FaCartShopping, FaUserPlus } from "react-icons/fa6";
 import { IoSearch } from "react-icons/io5";
 import { useNavigate } from "react-router";
 import { Logo } from "../../constants/image";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
 import type { RootState } from "../../utils/store";
 import { logout as logoutAction } from "../../utils/userSlice";
+import { setSearchTerm } from "../../utils/searchSlice";
+import { CartContext } from "../context/CartContext"; // ⚠️ adjust this path to wherever CartContext.tsx actually lives
+
+interface ProductSuggestion {
+  _id: string;
+  title: string;
+}
 
 const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // ✅ Single source of truth: Redux, not localStorage
   const user = useSelector((state: RootState) => state.user.user);
+  const searchTerm = useSelector((state: RootState) => state.search.term);
+
+  // ✅ Cart now comes from CartContext, the actual source of truth
+  const cartCtx = useContext(CartContext);
+  const cartCount = cartCtx?.cart?.items?.length || 0;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // 🛒 CART COUNT STATE
-  const [cartCount, setCartCount] = useState(0);
+  const [allProducts, setAllProducts] = useState<ProductSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchWrapperRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Sync cart count (still localStorage-based, that's fine for cart)
   useEffect(() => {
-    const syncCart = () => {
-      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-
-      const total = cart.reduce((sum: number, item: any) => {
-        return sum + (item.qty || item.quantity || 1);
-      }, 0);
-
-      setCartCount(total);
+    const fetchProducts = async () => {
+      try {
+        const res = await axios.get("http://localhost:4000/api/v1/product");
+        const fetched = res.data?.products || [];
+        setAllProducts(
+          fetched.map((p: any) => ({ _id: p._id, title: p.title })),
+        );
+      } catch (error) {
+        console.log(error);
+      }
     };
 
-    syncCart();
-
-    window.addEventListener("storage", syncCart);
-    window.addEventListener("focus", syncCart);
-
-    return () => {
-      window.removeEventListener("storage", syncCart);
-      window.removeEventListener("focus", syncCart);
-    };
+    fetchProducts();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        searchWrapperRef.current &&
+        !searchWrapperRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const suggestions =
+    searchTerm.trim() === ""
+      ? []
+      : allProducts
+          .filter((p) =>
+            p.title.toLowerCase().includes(searchTerm.trim().toLowerCase()),
+          )
+          .slice(0, 6);
+
+  const handleSuggestionClick = (title: string) => {
+    dispatch(setSearchTerm(title));
+    setShowSuggestions(false);
+    navigate("/");
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -64,9 +99,7 @@ const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200 px-4 sm:px-6 lg:px-10 py-3">
-
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-
         {/* LOGO */}
         <div className="flex items-center justify-between w-full md:w-auto">
           <div
@@ -78,9 +111,11 @@ const Navbar = () => {
 
           {/* MOBILE ICONS */}
           <div className="flex md:hidden items-center gap-4 text-xl">
-
             {/* 🛒 CART MOBILE */}
-            <div className="relative cursor-pointer" onClick={() => navigate("/cart")}>
+            <div
+              className="relative cursor-pointer"
+              onClick={() => navigate("/cart")}
+            >
               <FaCartShopping />
 
               {cartCount > 0 && (
@@ -106,23 +141,48 @@ const Navbar = () => {
         </div>
 
         {/* SEARCH */}
-        <div className="w-full md:max-w-xl mx-auto">
+        <div
+          className="w-full md:max-w-xl mx-auto relative"
+          ref={searchWrapperRef}
+        >
           <div className="flex border rounded-full overflow-hidden">
             <input
               type="text"
+              value={searchTerm}
+              onChange={(e) => {
+                dispatch(setSearchTerm(e.target.value));
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
               placeholder="Search products..."
               className="flex-1 px-4 py-2 outline-none"
             />
 
-            <button className="bg-orange-500 px-5 text-white">
+            <button className="bg-orange-500 px-5 text-white" type="button">
               <IoSearch />
             </button>
           </div>
+
+          {/* ✅ SUGGESTIONS DROPDOWN */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
+              {suggestions.map((item) => (
+                <button
+                  key={item._id}
+                  type="button"
+                  onClick={() => handleSuggestionClick(item.title)}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <IoSearch className="text-gray-400" />
+                  {item.title}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* DESKTOP MENU */}
         <div className="hidden md:flex items-center gap-6">
-
           {/* 🛒 CART DESKTOP */}
           <div
             className="relative cursor-pointer"
@@ -140,7 +200,6 @@ const Navbar = () => {
           {/* USER */}
           {user ? (
             <div className="relative">
-
               <button
                 onClick={() => setDropdownOpen((prev) => !prev)}
                 className="flex items-center gap-2 px-4 py-2 rounded-full bg-orange-100"
@@ -154,7 +213,6 @@ const Navbar = () => {
 
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 w-44 bg-white shadow-lg rounded-xl overflow-hidden">
-
                   <button
                     onClick={() => {
                       goToDashboard();
@@ -167,11 +225,14 @@ const Navbar = () => {
 
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
+                    className="w-full text-left px-4 py-2 text-amber-500 hover:bg-gray-100"
                   >
                     Logout
                   </button>
 
+                  <button className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">
+                    Delete Account
+                  </button>
                 </div>
               )}
             </div>

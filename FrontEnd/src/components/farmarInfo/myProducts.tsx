@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
+import { Profile } from "..";
 type Product = {
   _id: string;
   title: string;
@@ -91,11 +92,11 @@ const myProducts = () => {
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       setProducts((prev) =>
-        prev.map((p) => (p._id === editing._id ? res.data.product : p))
+        prev.map((p) => (p._id === editing._id ? res.data.product : p)),
       );
 
       setEditing(null);
@@ -107,30 +108,43 @@ const myProducts = () => {
   };
   return (
     <div className="flex min-h-screen bg-gray-100">
-
       {/* SIDEBAR */}
-      <div className="w-64 bg-white shadow-md p-5 hidden md:block">
-        <h2 className="text-xl font-bold mb-6 text-green-600">
-          Farmer Panel
-        </h2>
 
-        <ul className="space-y-4 text-gray-700">
-          <li onClick={() => navigate("/farmerDashboard")} className="cursor-pointer">
-            Dashboard
-          </li>
-          <li className="font-semibold text-green-600">Products</li>
-          <li onClick={() => navigate("/farmer/orders")} className="cursor-pointer">
-            Orders
-          </li>
-          <li onClick={() => navigate("/farmer/settings")} className="cursor-pointer">
-            Settings
-          </li>
-        </ul>
+      <div className="flex justify-between">
+        <div className="w-64 bg-white shadow-md p-5 hidden md:block">
+          <h2 className="text-xl font-bold mb-6 text-green-600">
+            Farmer Panel
+          </h2>
+
+          <ul className="space-y-4 text-gray-700">
+            <li
+              onClick={() => navigate("/farmerDashboard")}
+              className="cursor-pointer"
+            >
+              Dashboard
+            </li>
+            <li className="font-semibold text-green-600">Products</li>
+            <li
+              onClick={() => navigate("/farmer/orders")}
+              className="cursor-pointer"
+            >
+              Orders
+            </li>
+            <li
+              onClick={() => navigate("/farmer/farmerSetting")}
+              className="hover:text-green-600 cursor-pointer"
+            >
+              Settings
+            </li>
+          </ul>
+        </div>
+        <div>
+          <Profile />
+        </div>
       </div>
 
       {/* MAIN */}
       <div className="flex-1 p-6">
-
         <h1 className="text-2xl font-bold mb-6">My Products</h1>
 
         {loading ? (
@@ -140,7 +154,6 @@ const myProducts = () => {
         ) : (
           <div className="overflow-x-auto bg-white rounded-lg shadow">
             <table className="w-full text-center">
-
               <thead className="bg-gray-200">
                 <tr>
                   <th className="p-3">Name</th>
@@ -154,7 +167,6 @@ const myProducts = () => {
               <tbody>
                 {products.map((p) => (
                   <tr key={p._id} className="border-t hover:bg-gray-50">
-
                     <td className="p-3">{p.title}</td>
                     <td>Rs {p.price}</td>
                     <td>{p.stock}</td>
@@ -162,7 +174,6 @@ const myProducts = () => {
 
                     <td className="p-3">
                       <div className="flex justify-center gap-2">
-
                         <button
                           onClick={() => setEditing(p)}
                           className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
@@ -176,14 +187,11 @@ const myProducts = () => {
                         >
                           Delete
                         </button>
-
                       </div>
                     </td>
-
                   </tr>
                 ))}
               </tbody>
-
             </table>
           </div>
         )}
@@ -191,49 +199,51 @@ const myProducts = () => {
         {/* EDIT MODAL */}
         {editing && (
           <div className="fixed inset-0 bg-black/50 flex justify-center items-center p-4">
-
             <div className="bg-white p-6 rounded-xl w-full max-w-md">
+              <h2 className="text-xl font-semibold mb-4">Edit Product</h2>
 
-              <h2 className="text-xl font-semibold mb-4">
-                Edit Product
-              </h2>
-
-              <input className="border p-2 w-full mb-2"
+              <input
+                className="border p-2 w-full mb-2"
                 value={editing.title}
                 onChange={(e) =>
                   setEditing({ ...editing, title: e.target.value })
                 }
               />
 
-              <input className="border p-2 w-full mb-2"
+              <input
+                className="border p-2 w-full mb-2"
                 value={editing.price}
                 onChange={(e) =>
                   setEditing({ ...editing, price: Number(e.target.value) })
                 }
               />
 
-              <input className="border p-2 w-full mb-2"
+              <input
+                className="border p-2 w-full mb-2"
                 value={editing.stock}
                 onChange={(e) =>
                   setEditing({ ...editing, stock: Number(e.target.value) })
                 }
               />
 
-              <input className="border p-2 w-full mb-2"
+              <input
+                className="border p-2 w-full mb-2"
                 value={editing.location}
                 onChange={(e) =>
                   setEditing({ ...editing, location: e.target.value })
                 }
               />
 
-              <input className="border p-2 w-full mb-2"
+              <input
+                className="border p-2 w-full mb-2"
                 value={editing.category}
                 onChange={(e) =>
                   setEditing({ ...editing, category: e.target.value })
                 }
               />
 
-              <textarea className="border p-2 w-full mb-2"
+              <textarea
+                className="border p-2 w-full mb-2"
                 value={editing.description}
                 onChange={(e) =>
                   setEditing({ ...editing, description: e.target.value })
@@ -241,11 +251,7 @@ const myProducts = () => {
               />
 
               <div className="flex justify-end gap-2 mt-3">
-
-                <button
-                  onClick={() => setEditing(null)}
-                  className="px-3 py-1"
-                >
+                <button onClick={() => setEditing(null)} className="px-3 py-1">
                   Cancel
                 </button>
 
@@ -255,17 +261,13 @@ const myProducts = () => {
                 >
                   Save
                 </button>
-
               </div>
-
             </div>
-
           </div>
         )}
-
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default myProducts
+export default myProducts;

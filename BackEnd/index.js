@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+console.log("PORT:", process.env.PORT);
+console.log("JWT_SECRET:", process.env.JWT_SECRET);
 const connectDb = require("./config/connectDb");
 const userRouter = require("./router/userRouter");
 const productRouter = require("./router/ProductRouter");

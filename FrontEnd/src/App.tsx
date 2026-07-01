@@ -3,15 +3,17 @@ import {
   Cart,
   FarmarInfo,
   FarmerDashboard,
+  FarmerSetting,
   Footer,
   Hero,
   Login,
-  MyProducts,
   Navbar,
   Navbar2,
   OrderList,
+  VerifyEmail,
 } from "./components";
 import CustomerDashboard from "./components/CustomerProfile/customerProfile";
+import MyProducts from "./components/farmarInfo/myProducts";
 
 const App = () => {
   return (
@@ -29,11 +31,13 @@ const App = () => {
         />
         <Route path="/login" element={<Login type="login" />} />
         <Route path="/signUp" element={<Login type="signUp" />} />
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />
         <Route path="/contact" element={<FarmarInfo />} />
         <Route path="/farmerDashboard" element={<FarmerDashboard />} />
         <Route path="/customerDashboard" element={<CustomerDashboard />} />
         <Route path="/farmer/myProducts" element={<MyProducts />} />
         <Route path="/farmer/orders" element={<OrderList />} />
+        <Route path="/farmer/farmerSetting" element={<FarmerSetting />} />
         <Route path="/cart" element={<Cart />} />
       </Routes>
       <Footer />
