@@ -6,7 +6,6 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import type { RootState } from "../../utils/store";
-import { logout as logoutAction } from "../../utils/userSlice";
 import { setSearchTerm } from "../../utils/searchSlice";
 import { CartContext } from "../context/CartContext"; // ⚠️ adjust this path to wherever CartContext.tsx actually lives
 
@@ -25,8 +24,6 @@ const Navbar = () => {
   // ✅ Cart now comes from CartContext, the actual source of truth
   const cartCtx = useContext(CartContext);
   const cartCount = cartCtx?.cart?.items?.length || 0;
-
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [allProducts, setAllProducts] = useState<ProductSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -77,16 +74,6 @@ const Navbar = () => {
     navigate("/");
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-
-    dispatch(logoutAction());
-    setDropdownOpen(false);
-
-    navigate("/login");
-  };
-
   const goToDashboard = () => {
     if (user?.role === "farmer") {
       navigate("/farmerDashboard");
@@ -125,6 +112,7 @@ const Navbar = () => {
               )}
             </div>
 
+            {/* Avatar navigates straight to the role-based dashboard */}
             {user ? (
               <button
                 onClick={goToDashboard}
@@ -199,43 +187,16 @@ const Navbar = () => {
 
           {/* USER */}
           {user ? (
-            <div className="relative">
-              <button
-                onClick={() => setDropdownOpen((prev) => !prev)}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-orange-100"
-              >
-                <div className="w-8 h-8 bg-amber-500 text-white flex items-center justify-center rounded-full">
-                  {user.name?.charAt(0).toUpperCase()}
-                </div>
+            <button
+              onClick={goToDashboard}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-orange-100"
+            >
+              <div className="w-8 h-8 bg-amber-500 text-white flex items-center justify-center rounded-full">
+                {user.name?.charAt(0).toUpperCase()}
+              </div>
 
-                <span>{user.name}</span>
-              </button>
-
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-44 bg-white shadow-lg rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => {
-                      goToDashboard();
-                      setDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  >
-                    Dashboard
-                  </button>
-
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-amber-500 hover:bg-gray-100"
-                  >
-                    Logout
-                  </button>
-
-                  <button className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">
-                    Delete Account
-                  </button>
-                </div>
-              )}
-            </div>
+              <span>{user.name}</span>
+            </button>
           ) : (
             <button
               onClick={() => navigate("/login")}

@@ -7,7 +7,7 @@ import { HiOutlineMenu, HiX } from "react-icons/hi";
 import type { RootState } from "../../utils/store";
 import { logout as logoutAction, updateUser } from "../../utils/userSlice";
 import { setCart } from "../../utils/cartSlice";
-import UserProfileCard from "../UserProfile";
+
 
 const FarmerSettings = () => {
   const navigate = useNavigate();
@@ -110,7 +110,7 @@ const FarmerSettings = () => {
             Authorization: `Bearer ${token}`,
           },
         },
-      );
+      );  
 
       toast.success("Password updated ✅");
       setCurrentPassword("");
@@ -201,7 +201,7 @@ const FarmerSettings = () => {
         </ul>
       </div>
 
-      <UserProfileCard />
+      
     </>
   );
 

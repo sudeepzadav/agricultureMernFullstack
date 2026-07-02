@@ -1,9 +1,29 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { HiOutlineMenu, HiX } from "react-icons/hi";
+import UserProfileCard from "../UserProfile";
 
-const CustomerDashboard = () => {
+type Address = {
+  street?: string;
+  city?: string;
+  district?: string;
+  province?: string;
+  postalCode?: string;
+};
+
+type User = {
+  name: string;
+  email: string;
+  role: string;
+  phone?: string;
+  address?: Address | string;
+};
+
+const CustomerProfile = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+
+  const [user, setUser] = useState<User | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -15,7 +35,6 @@ const CustomerDashboard = () => {
 
     const parsed = JSON.parse(storedUser);
 
-    // basic role protection
     if (parsed.role !== "customer") {
       navigate("/");
       return;
@@ -24,74 +43,165 @@ const CustomerDashboard = () => {
     setUser(parsed);
   }, [navigate]);
 
-  return (
-    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-10 py-6">
-      {/* Header */}
-      <div className="bg-white shadow-sm rounded-xl p-6 flex flex-col md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Welcome, {user?.name || "Customer"} 👋
-          </h1>
-          <p className="text-gray-500 mt-1">
-            Manage your orders, profile, and shopping activity
-          </p>
-        </div>
+  const menuItems = [
+    { label: "Dashboard", action: () => navigate("/customerDashboard") },
+    { label: "My Orders", action: () => navigate("/orders") },
+    { label: "Profile", action: () => navigate("/customer-profile") },
+    { label: "Cart", action: () => navigate("/cart") },
+  ];
 
-        <button
-          onClick={() => navigate("/")}
-          className="mt-4 md:mt-0 px-5 py-2 rounded-full bg-orange-500 text-white hover:opacity-90 transition"
-        >
-          Continue Shopping
+  // SIDEBAR 
+  const Sidebar = () => (
+    <div>
+      <h2 className="text-2xl font-bold text-orange-500 mb-8">
+        Customer Panel
+      </h2>
+
+      <ul className="space-y-4">
+        {menuItems.map((item) => (
+          <li
+            key={item.label}
+            onClick={() => {
+              item.action();
+              setMobileMenuOpen(false);
+            }}
+            className="cursor-pointer rounded-lg px-3 py-2 hover:bg-orange-50 hover:text-orange-500 transition"
+          >
+            {item.label}
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-10 border-t pt-4">
+       <UserProfileCard/>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-145 bg-gray-100 flex">
+      {/* MOBILE TOP BAR */}
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-white shadow px-4 py-3 flex justify-between items-center">
+        <h2 className="font-bold text-orange-500">Profile</h2>
+
+        <button onClick={() => setMobileMenuOpen(true)}>
+          <HiOutlineMenu className="text-2xl" />
         </button>
       </div>
 
-      {/* Dashboard Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+      {/* MOBILE SIDEBAR */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 bg-black/40 flex">
+          <div className="w-72 bg-white h-full p-6">
+            <button
+              className="mb-6"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <HiX className="text-2xl" />
+            </button>
 
-        {/* Orders */}
-        <div
-          onClick={() => navigate("/orders")}
-          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md cursor-pointer transition"
-        >
-          <h2 className="text-lg font-semibold text-gray-800">My Orders</h2>
-          <p className="text-gray-500 mt-2">
-            View and track your recent purchases
-          </p>
+            <Sidebar />
+          </div>
+
+          <div
+            className="flex-1"
+            onClick={() => setMobileMenuOpen(false)}
+          />
         </div>
+      )}
 
-        {/* Profile */}
-        <div
-          onClick={() => navigate("/profile")}
-          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md cursor-pointer transition"
-        >
-          <h2 className="text-lg font-semibold text-gray-800">Profile</h2>
-          <p className="text-gray-500 mt-2">
-            Update your personal information
-          </p>
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden md:block w-64 bg-white shadow-md p-6">
+        <Sidebar />
+      </aside>
+
+      {/* rightside */}
+      <main className="flex-1">
+        <div className="min-h-145 bg-gray-100 py-8 px-4">
+          <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-md overflow-hidden">
+            
+            {/* Header */}
+            <div className="bg-orange-500 h-32"></div>
+
+            {/* Profile Body */}
+            <div className="px-8 pb-8">
+
+              {/* Avatar */}
+              <div className="-mt-14 flex flex-col items-center">
+                <div className="w-28 h-28 rounded-full bg-white border-4 border-white shadow flex items-center justify-center text-4xl font-bold text-orange-500">
+                  {user?.name?.charAt(0).toUpperCase()}
+                </div>
+
+                <h1 className="mt-4 text-2xl font-bold">{user?.name}</h1>
+                <p className="text-gray-500 capitalize">{user?.role}</p>
+              </div>
+
+              {/* Info Grid */}
+              <div className="mt-10 grid gap-6 sm:grid-cols-2">
+
+                <div>
+                  <p className="text-gray-500 text-sm">Full Name</p>
+                  <p className="font-semibold text-lg">{user?.name}</p>
+                </div>
+
+                <div>
+                  <p className="text-gray-500 text-sm">Email</p>
+                  <p className="font-semibold text-lg">{user?.email}</p>
+                </div>
+
+                <div>
+                  <p className="text-gray-500 text-sm">Phone Number</p>
+                  <p className="font-semibold text-lg">
+                    {user?.phone || "Not Added"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-gray-500 text-sm">Role</p>
+                  <p className="font-semibold text-lg capitalize">
+                    {user?.role}
+                  </p>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <p className="text-gray-500 text-sm">Shipping Address</p>
+
+                  <p className="font-semibold text-lg">
+                    {user?.address
+                      ? typeof user.address === "string"
+                        ? user.address
+                        : `${user.address.street || ""}, ${user.address.city || ""}, ${user.address.district || ""}, ${user.address.province || ""} - ${user.address.postalCode || ""}`
+                      : "No shipping address added"}
+                  </p>
+                </div>
+
+              </div>
+
+              {/* Buttons */}
+              <div className="mt-10 flex flex-wrap gap-4">
+
+                <button
+                  onClick={() => navigate("/edit-profile")}
+                  className="px-6 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition"
+                >
+                  Edit Profile
+                </button>
+
+                <button
+                  onClick={() => navigate(-1)}
+                  className="px-6 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
+                >
+                  Back
+                </button>
+
+              </div>
+
+            </div>
+          </div>
         </div>
-
-        {/* Cart */}
-        <div
-          onClick={() => navigate("/cart")}
-          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md cursor-pointer transition"
-        >
-          <h2 className="text-lg font-semibold text-gray-800">Cart</h2>
-          <p className="text-gray-500 mt-2">
-            View items you are about to purchase
-          </p>
-        </div>
-
-        {/* Settings (future use) */}
-        <div className="bg-white p-6 rounded-xl shadow-sm opacity-60">
-          <h2 className="text-lg font-semibold text-gray-800">Settings</h2>
-          <p className="text-gray-500 mt-2">
-            Coming soon...
-          </p>
-        </div>
-
-      </div>
+      </main>
     </div>
   );
 };
 
-export default CustomerDashboard;
+export default CustomerProfile;

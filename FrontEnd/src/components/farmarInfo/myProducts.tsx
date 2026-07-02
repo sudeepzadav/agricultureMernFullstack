@@ -2,7 +2,6 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-import { Profile } from "..";
 type Product = {
   _id: string;
   title: string;
@@ -110,7 +109,6 @@ const myProducts = () => {
     <div className="flex min-h-screen bg-gray-100">
       {/* SIDEBAR */}
 
-      <div className="flex justify-between">
         <div className="w-64 bg-white shadow-md p-5 hidden md:block">
           <h2 className="text-xl font-bold mb-6 text-green-600">
             Farmer Panel
@@ -138,10 +136,8 @@ const myProducts = () => {
             </li>
           </ul>
         </div>
-        <div>
-          <Profile />
-        </div>
-      </div>
+        
+      
 
       {/* MAIN */}
       <div className="flex-1 p-6">

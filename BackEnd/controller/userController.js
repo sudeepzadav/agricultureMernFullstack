@@ -172,7 +172,7 @@ async function userSignIn(req, res) {
     if (!isMatch) {
       return res.status(400).json({
         success: false,
-        message: "Invalid credentials",
+        message: "Password does not match",
       });
     }
 
@@ -241,16 +241,25 @@ async function getUserById(req, res) {
 
 async function updateUserById(req, res) {
   try {
-    const { id } = req.params;
+    const userId = req.user?.id || req.user?._id;   // ← this line replaces `const { id } = req.params;`
 
-    const updatedUser = Users.findByIdAndUpdate(id, req.body, { new: true });
-    if (!updatedUser) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User Not Found" });
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Not authenticated" });
     }
 
-    return res.status(201).json({
+    const { name, email } = req.body;
+
+    const updatedUser = await Users.findByIdAndUpdate(
+      userId,
+      { name, email },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User Not Found" });
+    }
+
+    return res.status(200).json({
       success: true,
       message: "User updated successfully",
       user: updatedUser,
@@ -265,18 +274,89 @@ async function updateUserById(req, res) {
 // ===============================
 async function deleteUserById(req, res) {
   try {
-    const { id } = req.params;
+    const userId = req.user?.id || req.user?._id;
 
-    const deletedUser = Users.findByIdAndDelete(id);
-    if (!deletedUser) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User Not Found" });
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authenticated",
+      });
     }
 
-    return res
-      .status(201)
-      .json({ success: true, message: "User deleted successfull" });
+    const deletedUser = await Users.findByIdAndDelete(userId);
+
+    if (!deletedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User Not Found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    return errorHandler(res, error);
+  }
+}
+
+// ===============================
+// Change Password
+// ===============================
+async function changePassword(req, res) {
+  try {
+    const userId = req.user?.id || req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authenticated",
+      });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill all fields",
+      });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters",
+      });
+    }
+
+    const user = await Users.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User Not Found",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
   } catch (error) {
     return errorHandler(res, error);
   }
@@ -288,4 +368,5 @@ module.exports = {
   getUserById,
   updateUserById,
   deleteUserById,
+  changePassword,
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
@@ -6,6 +6,7 @@ import type { RootState } from "../../utils/store";
 import { addToCart } from "../../utils/cartSlice";
 import { MdLocationPin } from "react-icons/md";
 import { BiSolidCategoryAlt } from "react-icons/bi";
+import { CartContext } from "../context/CartContext"; // ⚠️ adjust path to match Navbar's import
 
 interface Product {
   _id: string;
@@ -28,6 +29,9 @@ const Hero = () => {
   // live search term from Navbar
   const searchTerm = useSelector((state: RootState) => state.search.term);
 
+  // ✅ used only to trigger a re-fetch so Navbar updates instantly
+  const cartCtx = useContext(CartContext);
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,31 +41,31 @@ const Hero = () => {
 
   // FETCH PRODUCTS
   useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      const res = await axios.get("http://localhost:4000/api/v1/product");
+    const fetchProducts = async () => {
+      try {
+        const res = await axios.get("http://localhost:4000/api/v1/product");
 
-      const fetched = res.data?.products || [];
+        const fetched = res.data?.products || [];
 
-      // newest first (opposite order)
-      setProducts([...fetched].reverse());
+        // newest first (opposite order)
+        setProducts([...fetched].reverse());
 
-      if (fetched.length) {
-        const highest = Math.max(...fetched.map((p: Product) => p.price));
-        setMaxPrice(highest);
+        if (fetched.length) {
+          const highest = Math.max(...fetched.map((p: Product) => p.price));
+          setMaxPrice(highest);
+        }
+      } catch (error) {
+        console.log(error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.log(error);
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchProducts();
-}, []);
+    fetchProducts();
+  }, []);
 
-  // ADD TO CART (Redux + Backend ready)
+  // ADD TO CART (Redux + Backend, now also syncs CartContext for Navbar)
   const addToCartHandler = async (product: Product) => {
     try {
       if (!user) {
@@ -69,10 +73,10 @@ const Hero = () => {
         return;
       }
 
-      // 1. Redux update
+      // 1. Redux update (unchanged — used elsewhere in your app)
       dispatch(addToCart(product));
 
-      // 2. Backend save (MongoDB)
+      // 2. Backend save (MongoDB) — unchanged, working endpoint
       await axios.post(
         "http://localhost:4000/api/v1/cart/addtoCart",
         {
@@ -85,6 +89,9 @@ const Hero = () => {
           },
         }
       );
+
+      // 3. ✅ Tell CartContext to re-fetch so Navbar's badge updates immediately
+      await cartCtx?.fetchCart();
 
       toast.success("Added to cart 🛒");
     } catch (error) {
@@ -100,16 +107,12 @@ const Hero = () => {
   // FILTER DATA
   const categories = [
     "All",
-    ...Array.from(
-      new Set(products.map((p) => p.category).filter(Boolean))
-    ),
+    ...Array.from(new Set(products.map((p) => p.category).filter(Boolean))),
   ];
 
   const locations = [
     "All",
-    ...Array.from(
-      new Set(products.map((p) => p.location).filter(Boolean))
-    ),
+    ...Array.from(new Set(products.map((p) => p.location).filter(Boolean))),
   ];
 
   const filteredProducts = products.filter((product) => {

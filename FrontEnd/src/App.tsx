@@ -1,6 +1,8 @@
 import { Route, Routes } from "react-router";
 import {
   Cart,
+  ContactForm,
+  CustomerProfile,
   FarmarInfo,
   FarmerDashboard,
   FarmerSetting,
@@ -12,8 +14,8 @@ import {
   OrderList,
   VerifyEmail,
 } from "./components";
-import CustomerDashboard from "./components/CustomerProfile/customerProfile";
 import MyProducts from "./components/farmarInfo/myProducts";
+import CustomerDashboard from "./components/CustomerProfile/customerDashboard";
 
 const App = () => {
   return (
@@ -29,12 +31,21 @@ const App = () => {
             </>
           }
         />
+        <Route
+          path="/contact"
+          element={
+            <>
+              <FarmarInfo />
+              <ContactForm />
+            </>
+          }
+        />
         <Route path="/login" element={<Login type="login" />} />
         <Route path="/signUp" element={<Login type="signUp" />} />
         <Route path="/verify-email/:token" element={<VerifyEmail />} />
-        <Route path="/contact" element={<FarmarInfo />} />
         <Route path="/farmerDashboard" element={<FarmerDashboard />} />
         <Route path="/customerDashboard" element={<CustomerDashboard />} />
+        <Route path="/customer-profile" element={<CustomerProfile />} />
         <Route path="/farmer/myProducts" element={<MyProducts />} />
         <Route path="/farmer/orders" element={<OrderList />} />
         <Route path="/farmer/farmerSetting" element={<FarmerSetting />} />

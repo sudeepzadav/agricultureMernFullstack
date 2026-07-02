@@ -110,7 +110,7 @@ const FarmerDashboard = () => {
   const totalStock = products.reduce((acc, p) => acc + p.stock, 0);
 
   return (
-    <div className="min-h-160 bg-gray-100 flex">
+    <div className="min-h-145 bg-gray-100 flex">
       {/* ================= SIDEBAR ================= */}
       <div className="w-64 bg-white shadow-md p-5 hidden md:flex md:flex-col md:justify-between">
         <div>
@@ -154,11 +154,11 @@ const FarmerDashboard = () => {
       </div>
 
       {/* ================= MAIN ================= */}
-      <div className="flex-1 p-5 md:p-8">
+      <div className="flex-1 p-5 md:p-4 h-145">
         <h1 className="text-3xl font-bold mb-6">Farmer Dashboard 🌾</h1>
 
         {/* ================= STATS ================= */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2">
           <div className="bg-white p-5 rounded-xl shadow">
             <h3>Total Products</h3>
             <p className="text-2xl font-bold">{products.length}</p>
